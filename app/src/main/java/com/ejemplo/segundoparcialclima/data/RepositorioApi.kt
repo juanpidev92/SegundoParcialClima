@@ -56,6 +56,7 @@ class RepositorioApi {
         }
     }
 
+    // Forecast por nombre de ciudad (para ciudades normales)
     suspend fun traerPronostico(nombre: String): List<ListForecastDTO> {
         val respuesta = cliente.get("https://api.openweathermap.org/data/2.5/forecast") {
             parameter("q", nombre)
@@ -69,4 +70,21 @@ class RepositorioApi {
             throw Exception("Error al traer pronóstico")
         }
     }
+
+    // Forecast por coordenadas (para "Mi ubicación")
+    suspend fun traerPronosticoPorCoords(lat: Float, lon: Float): List<ListForecastDTO> {
+        val respuesta = cliente.get("https://api.openweathermap.org/data/2.5/forecast") {
+            parameter("lat", lat)
+            parameter("lon", lon)
+            parameter("units", "metric")
+            parameter("appid", apiKey)
+        }
+        if (respuesta.status == HttpStatusCode.OK) {
+            val forecast = respuesta.body<ForecastDTO>()
+            return forecast.list
+        } else {
+            throw Exception("Error al traer pronóstico por coords")
+        }
+    }
 }
+
