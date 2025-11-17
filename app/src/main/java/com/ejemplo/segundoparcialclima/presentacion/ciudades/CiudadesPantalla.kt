@@ -15,7 +15,8 @@ import com.ejemplo.segundoparcialclima.model.Ciudad
 @Composable
 fun CiudadesPantalla(
     viewModel: CiudadesViewModel,
-    onCiudadSeleccionada: (Ciudad) -> Unit
+    onCiudadSeleccionada: (Ciudad) -> Unit,
+    onBuscarPorUbicacion: () -> Unit   // ⬅ nuevo parámetro
 ) {
     val estado = viewModel.estado.value
 
@@ -31,10 +32,22 @@ fun CiudadesPantalla(
 
         OutlinedTextField(
             value = estado.textoBuscador,
-            onValueChange = { viewModel.procesar(CiudadesIntencion.CambiarTextoBuscador(it)) },
+            onValueChange = {
+                viewModel.procesar(CiudadesIntencion.CambiarTextoBuscador(it))
+            },
             label = { Text("Buscar ciudad") },
             modifier = Modifier.fillMaxWidth()
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // ⬇ Botón para usar la ubicación actual
+        Button(
+            onClick = { onBuscarPorUbicacion() },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Usar mi ubicación")
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -72,4 +85,3 @@ fun CiudadItem(
         Text(text = ciudad.nombre, style = MaterialTheme.typography.bodyLarge)
     }
 }
-
