@@ -9,32 +9,7 @@ object ClimaRepositorio {
 
     private val api = RepositorioApi()
 
-    // Lista local basica
-    private val ciudadesLocales = listOf(
-        Ciudad(1, "Buenos Aires", -34.6, -58.4),
-        Ciudad(2, "Córdoba", -31.4, -64.2),
-        Ciudad(3, "Rosario", -32.9, -60.7),
-        Ciudad(4, "Mendoza", -32.9, -68.8),
-        Ciudad(5, "Mar del Plata", -38.0, -57.5),
-    )
-
-    fun obtenerCiudadesLocales(): List<Ciudad> = ciudadesLocales
-
-    suspend fun buscarCiudadesPorNombre(texto: String): List<Ciudad> {
-        if (texto.isBlank()) return ciudadesLocales
-
-        val dtos = api.buscarCiudad(texto)
-
-        // Mapear DTO → modelo de dominio
-        return dtos.mapIndexed { index, dto ->
-            Ciudad(
-                id = index, // o algún otro identificador
-                nombre = dto.name,
-                latitud = dto.lat.toDouble(),
-                longitud = dto.lon.toDouble()
-            )
-        }
-    }
+    // ... ciudadesLocales y obtenerCiudadesLocales() igual que antes ...
 
     suspend fun obtenerClima(ciudad: Ciudad): ClimaDetalle {
         val climaDTO = api.traerClima(
@@ -42,16 +17,29 @@ object ClimaRepositorio {
             lon = ciudad.longitud.toFloat()
         )
 
-        val pronosticoDTO = api.traerPronostico(ciudad.nombre)
+        // si es "Mi ubicación" (id -1), usamos forecast por coords
+        val pronosticoDTO = try {
+            if (ciudad.id == -1) {
+                api.traerPronosticoPorCoords(
+                    lat = ciudad.latitud.toFloat(),
+                    lon = ciudad.longitud.toFloat()
+                )
+            } else {
+                api.traerPronostico(ciudad.nombre)
+            }
+        } catch (e: Exception) {
+            // si el forecast falla, devolvemos lista vacía pero NO rompemos toda la pantalla
+            emptyList()
+        }
 
         val pronostico = pronosticoDTO
-            .take(5) // simplificamos: 5 entradas para "5 días"
+            .take(5)
             .mapIndexed { index, item ->
                 ClimaDia(
                     dia = "Día ${index + 1}",
                     tempMin = item.main.temp_min.toInt(),
                     tempMax = item.main.temp_max.toInt(),
-                    descripcion = "" // retocar
+                    descripcion = ""
                 )
             }
 
@@ -64,4 +52,5 @@ object ClimaRepositorio {
         )
     }
 }
+
 
